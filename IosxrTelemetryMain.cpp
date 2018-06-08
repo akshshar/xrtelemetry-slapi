@@ -1,5 +1,5 @@
 #include "IosxrTelemetrySub.h"
-#include "IosxrServiceLayerRoute.h"
+#include "ServiceLayerRoute.h"
 #include <csignal>
 
 using grpc::ClientContext;
@@ -8,7 +8,7 @@ using grpc::ClientReaderWriter;
 using grpc::ClientWriter;
 using grpc::CompletionQueue;
 using grpc::Status;
-using namespace openr;
+using namespace iosxr;
 
 std::string 
 getEnvVar(std::string const & key)
@@ -19,7 +19,7 @@ getEnvVar(std::string const & key)
 
 
 TelemetryStream* asynchandler_telemetry_signum;
-SLVrf* vrfhandler_signum;
+IosxrslVrf* vrfhandler_signum;
 AsyncNotifChannel* asynchandler_slapi_signum;
 
 bool sighandle_initiated = false;
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
     // Set up a new channel for vrf/route messages
 
-    SLVrf vrfhandler(grpc::CreateChannel(
+    IosxrslVrf vrfhandler(grpc::CreateChannel(
                               grpc_server, grpc::InsecureChannelCredentials()));
 
     // Create a new SLVrfRegMsg batch

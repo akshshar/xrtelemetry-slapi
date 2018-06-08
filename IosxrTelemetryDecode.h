@@ -15,7 +15,7 @@
 #include <xrtelemetry/telemetry.grpc.pb.h>
 #include <xrtelemetry/cisco_ios_xr_ipv6_nd_oper/ipv6_node_discovery/nodes/node/neighbor_interfaces/neighbor_interface/host_addresses/host_address/ipv6_nd_neighbor_entry.pb.h>
 
-namespace openr {
+namespace iosxr {
 
 std::string gpbMsgToJson(const google::protobuf::Message& message);
 

@@ -10,7 +10,7 @@ using grpc::CompletionQueue;
 using grpc::Status;
 
 
-namespace openr {
+namespace iosxr {
 
 template<typename FwdIterator>
 void deleter(FwdIterator from, FwdIterator to)

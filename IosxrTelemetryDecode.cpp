@@ -7,7 +7,7 @@
 #include <google/protobuf/util/json_util.h>
 
 
-namespace openr {
+namespace iosxr {
 
 namespace {
     SensorPaths sensorPaths = {

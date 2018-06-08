@@ -4,7 +4,7 @@
 
 #include <folly/Format.h>
 
-namespace openr {
+namespace iosxr {
 
 class IosxrTelemetryException : public std::runtime_error {
  public:
@@ -12,4 +12,4 @@ class IosxrTelemetryException : public std::runtime_error {
       : std::runtime_error(
             folly::sformat("IosxrTelemetry exception: {} ", exception)) {}
 };
-} // namespace openr
+} // namespace iosxr 
