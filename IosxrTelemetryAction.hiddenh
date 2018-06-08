@@ -1,0 +1,45 @@
+#pragma once
+
+#include "quickstart.h"
+#include <arpa/inet.h>
+#include <google/protobuf/text_format.h>
+#include <csignal>
+
+using grpc::ClientContext;
+using grpc::ClientReader;
+using grpc::ClientReaderWriter;
+using grpc::ClientWriter;
+using grpc::CompletionQueue;
+using grpc::Status;
+using service_layer::SLInitMsg;
+using service_layer::SLVersion;
+using service_layer::SLGlobal;
+
+
+std::mutex init_mutex;
+std::condition_variable init_condVar;
+bool init_success;
+
+namespace openr {
+
+class TelemetryAction {
+public:
+    explicit TelemetryAction();
+    ~TelemetryAction();
+
+    // Setting up 
+    void DecodeTelemetryData(const telemetry::Telemetry& telemetry_data);
+
+    // decode Telemetry data and call hooks based on encoding path
+    void DecodeTelemetryDataGPB(const telemetry::Telemetry& telemetry_data);
+
+    void DecodeTelemetryDataGPBKV(const telemetry::Telemetry& telemetry_data);
+
+    // Helper Methods called based on different Sensor Paths
+    void DecodeIPv6NeighborsGPB(const ::telemetry::TelemetryRowGPB& telemetry_gpb_row);
+
+    void DecodeIPv6NeighborsGPBKV(const ::telemetry::TelemetryField& telemetry_gpbkv_field);
+
+};
+
+}
