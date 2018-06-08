@@ -23,7 +23,7 @@ void deleter(FwdIterator from, FwdIterator to)
 }
 
 TelemetryStream::TelemetryStream(std::shared_ptr<grpc::Channel> channel)
-        : stub_(IOSXRExtensibleManagabilityService::gRPCConfigOper::NewStub(channel)) {}
+        : channel_(channel), stub_(IOSXRExtensibleManagabilityService::gRPCConfigOper::NewStub(channel)) {}
 
 TelemetryStream::~TelemetryStream()
 {
@@ -58,7 +58,7 @@ TelemetryStream::Subscribe(const SubscriptionData& subscription_data)
     // In our case it isn't really necessary, since we operate within the
     // context of the same class, but anyway, we pass it in as the tag
 
-    callvector_.push_back(new AsyncClientCall());
+    callvector_.push_back(new AsyncClientCall(channel_));
 
     callvector_.back()->context.AddMetadata("username", this->GetCredentials()["username"]);
     callvector_.back()->context.AddMetadata("password", this->GetCredentials()["password"]);
@@ -151,9 +151,9 @@ TelemetryStream::AsyncCompleteRpc()
     }
 }
 
-TelemetryStream::AsyncClientCall::AsyncClientCall()
+TelemetryStream::AsyncClientCall::AsyncClientCall(std::shared_ptr<grpc::Channel> channel)
   : callStatus_(CREATE),
-    telemetryDecode_(std::make_unique<TelemetryDecode>()) {}
+    telemetryDecode_(std::make_unique<TelemetryDecode>(channel)) {}
 
 TelemetryStream::AsyncClientCall::~AsyncClientCall() 
 {

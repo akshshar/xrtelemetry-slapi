@@ -7,12 +7,12 @@ namespace iosxr {
 
 namespace {
 
-    AddrFamily addrFamily = { 
+    AddrFamily addrFamily = {
                                { "IPv4" , AF_INET},
                                { "IPv6" , AF_INET6}
                              };
-  
-    RouteBatch routeBatch = {
+
+    RouteBatch routeBatch1 = {
                               {
                                   {"address_family", "IPv4"},
                                   {"prefix", "30.1.1.0"},
@@ -22,44 +22,54 @@ namespace {
                                   {"nexthop_interface", "GigabitEthernet0/0/0/0"},
                               },
 
-                              {   
+                              {
                                   {"address_family", "IPv4"},
                                   {"prefix", "40.1.1.0"},
-                                  {"prefixlen", "24"}, 
+                                  {"prefixlen", "24"},
                                   {"admin_distance", "120"},
                                   {"nexthop_address", "11.1.1.20"},
                                   {"nexthop_interface", "GigabitEthernet0/0/0/0"},
+                              }
+                             };
+
+
+
+    RouteBatch routeBatch2 = {
+                              {
+                                  {"address_family", "IPv4"},
+                                  {"prefix", "30.1.1.0"},
+                                  {"prefixlen", "24"},
+                                  {"admin_distance", "120"},
+                                  {"nexthop_address", "12.1.1.20"},
+                                  {"nexthop_interface", "GigabitEthernet0/0/0/1"},
                               },
 
 
-                              {   
+                              {
                                   {"address_family", "IPv4"},
-                                  {"prefix", "50.1.1.0"},
-                                  {"prefixlen", "24"}, 
+                                  {"prefix", "40.1.1.0"},
+                                  {"prefixlen", "24"},
                                   {"admin_distance", "120"},
-                                  {"nexthop_address", "11.1.1.20"},
-                                  {"nexthop_interface", "GigabitEthernet0/0/0/0"},
-                              },
-
-
-                              {   
-                                  {"address_family", "IPv4"},
-                                  {"prefix", "60.1.1.0"},
-                                  {"prefixlen", "24"}, 
-                                  {"admin_distance", "120"},
-                                  {"nexthop_address", "11.1.1.20"},
-                                  {"nexthop_interface", "GigabitEthernet0/0/0/0"},
+                                  {"nexthop_address", "12.1.1.20"},
+                                  {"nexthop_interface", "GigabitEthernet0/0/0/1"},
                               },
 
                             };
-  
+
+
+    RouteBatchMap routeBatchMap = {
+                                      {"batch1", routeBatch1},
+                                      {"batch2", routeBatch2}
+                                  };
 }
+
 
 
 TelemetryAction::TelemetryAction(std::shared_ptr<grpc::Channel> Channel)
   : iosxrsl_route_(std::make_unique<IosxrslRoute>(Channel))
 {}
 
+TelemetryAction::~TelemetryAction() {}
 
 // Set VRF context for V4 routes
 void
@@ -87,15 +97,15 @@ TelemetryAction::setIosxrslRouteVrf(std::string vrfName)
 
 void 
 TelemetryAction::IosxrslRoutePlay(std::string vrf,
-                                 RouteBatch route_batch,
-                                 service_layer::SLObjectOp routeOp)
+                                 service_layer::SLObjectOp routeOp,
+                                 std::string batchname)
 {
 
     try
     {
         setIosxrslRouteVrf(vrf);
-        for (auto & route : route_batch) {
-            switch(addrFamily[route["address_family"]]) {
+        for (auto & route : iosxr::routeBatchMap[batchname]) {
+            switch(iosxr::addrFamily[route["address_family"]]) {
       
             case AF_INET:
                 {

@@ -97,6 +97,10 @@ private:
     // passed in as metadata for each RPC. 
     Credentials credentials_;
 
+    // Shared grpc channel, to be passed down to Telemetrystream and TelemetryAction objects
+
+    std::shared_ptr<grpc::Channel> channel_;
+
     // Used as an indicator to exit completion queue thread upon queue shutdown.
     bool tear_down = false;
 
@@ -105,7 +109,7 @@ private:
         enum CallStatus {CREATE, PROCESS, FINISH};
         CallStatus callStatus_;
     public:
-        AsyncClientCall();
+        explicit AsyncClientCall(std::shared_ptr<grpc::Channel>);
         ~AsyncClientCall();
 
         // Container for the data we expect from the server.

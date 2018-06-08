@@ -14,6 +14,10 @@
 #include <xrtelemetry/telemetry.pb.h>
 #include <xrtelemetry/telemetry.grpc.pb.h>
 #include <xrtelemetry/cisco_ios_xr_ipv6_nd_oper/ipv6_node_discovery/nodes/node/neighbor_interfaces/neighbor_interface/host_addresses/host_address/ipv6_nd_neighbor_entry.pb.h>
+#include "IosxrTelemetryAction.h"
+//#include "IosxrCommon.h"
+
+//using iosxr::RouteBatch;
 
 namespace iosxr {
 
@@ -27,9 +31,10 @@ using DecodeSensorPathMapGPB = std::unordered_map<std::string, DecodeSensorPathG
 using DecodeSensorPathGPBKV = void (TelemetryDecode::*)(const telemetry::TelemetryField& telemetry_gpbkv_field);
 using DecodeSensorPathMapGPBKV = std::unordered_map<std::string, DecodeSensorPathGPBKV>;
 
+
 class TelemetryDecode {
 public:
-    explicit TelemetryDecode();
+    explicit TelemetryDecode(std::shared_ptr<grpc::Channel> Channel);
     ~TelemetryDecode();
 
     DecodeSensorPathMapGPB decodeSensorPathMapGPB;
@@ -47,6 +52,9 @@ public:
     void DecodeIPv6NeighborsGPB(const ::telemetry::TelemetryRowGPB& telemetry_gpb_row);
 
     void DecodeIPv6NeighborsGPBKV(const ::telemetry::TelemetryField& telemetry_gpbkv_field);
+
+    std::unique_ptr<TelemetryAction> telemetry_action_;
+    std::vector<std::map<std::string, std::string>> path_map_vector;
 
 };
 

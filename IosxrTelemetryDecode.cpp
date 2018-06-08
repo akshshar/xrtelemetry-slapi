@@ -1,6 +1,5 @@
 #include "IosxrTelemetryDecode.h" 
 #include "IosxrTelemetryException.h"
-#include "IosxrTelemetryAction.h"
 
 
 #include <google/protobuf/text_format.h>
@@ -16,7 +15,50 @@ namespace {
                                   "Cisco-IOS-XR-ipv6-nd-oper:ipv6-node-discovery/nodes/node/neighbor-interfaces/neighbor-interface/host-addresses/host-address"
                                 }
                               };
+
+
+    std::map<std::string, std::string>
+    active_path_map = {
+                        { "interface", "GigabitEthernet0/0/0/0" },
+                        { "neighbor", "1010:1010::2" },
+                        { "reachability_state", "reachable" }
+                      };
+
+    std::map<std::string, std::string>
+    backup_path_map = { 
+                         { "interface", "GigabitEthernet0/0/0/1" },
+                         { "neighbor", "2020:2020::2" },
+                         { "reachability_state", "reachable" }
+                      };
 }
+
+template <typename Map>
+bool map_compare (Map const &lhs, Map const &rhs) {
+    // No predicate needed because there is operator== for pairs already.
+    return lhs.size() == rhs.size()
+        && std::equal(lhs.begin(), lhs.end(),
+                      rhs.begin());
+}
+
+
+
+
+TelemetryDecode::TelemetryDecode(std::shared_ptr<grpc::Channel> Channel)
+  : telemetry_action_(std::make_unique<TelemetryAction>(Channel))
+{
+   decodeSensorPathMapGPB.insert(
+                 std::make_pair(
+                      sensorPaths["iosxr-ipv6-nd-address"],
+                      &TelemetryDecode::DecodeIPv6NeighborsGPB));
+
+   decodeSensorPathMapGPBKV.insert(
+                 std::make_pair(
+                      sensorPaths["iosxr-ipv6-nd-address"],
+                      &TelemetryDecode::DecodeIPv6NeighborsGPBKV));
+}
+
+TelemetryDecode::~TelemetryDecode() {};
+
 
 std::string
 gpbMsgToJson(const google::protobuf::Message& message)
@@ -43,21 +85,6 @@ gpbMsgToJson(const google::protobuf::Message& message)
         return "";
     }
 }
-
-TelemetryDecode::TelemetryDecode()
-{
-   decodeSensorPathMapGPB.insert(
-                 std::make_pair(
-                      sensorPaths["iosxr-ipv6-nd-address"],
-                      &TelemetryDecode::DecodeIPv6NeighborsGPB));
-
-   decodeSensorPathMapGPBKV.insert(
-                 std::make_pair(
-                      sensorPaths["iosxr-ipv6-nd-address"],
-                      &TelemetryDecode::DecodeIPv6NeighborsGPBKV));
-}
-
-TelemetryDecode::~TelemetryDecode() {};
 
 
 void
@@ -107,9 +134,19 @@ DecodeIPv6NeighborsGPB(const ::telemetry::TelemetryRowGPB& telemetry_gpb_row)
                     "Failed to fetch IPv6 neighbor entry"));
     }
 
-    
+    std::map<std::string, std::string>
+    path_map = {
+                 { "interface", ipv6_nd_neigh_entry_keys.interface_name() },
+                 { "neighbor", ipv6_nd_neigh_entry_keys.host_address() },
+                 { "reachability_state", ipv6_nd_neigh_entry.reachability_state() }
+               };
+
+
+    path_map_vector.push_back(path_map);
+ 
 }
 
+                    
 void
 TelemetryDecode::
 DecodeIPv6NeighborsGPBKV(const ::telemetry::TelemetryField& telemetry_gpbkv_field)
@@ -134,6 +171,26 @@ TelemetryDecode::DecodeTelemetryDataGPB(const telemetry::Telemetry& telemetry_da
 
             row_index++;
         }
+
+        bool active_path_up = false;
+
+        for (auto &path_map : path_map_vector) {
+            active_path_up = map_compare(path_map, active_path_map);
+            if (active_path_up) {break;}
+        }
+        if (active_path_up) {
+            telemetry_action_->IosxrslRoutePlay("default",
+                                                service_layer::SL_OBJOP_UPDATE,
+                                                "batch1");
+        } else {
+             telemetry_action_->IosxrslRoutePlay("default",
+                                                service_layer::SL_OBJOP_UPDATE,
+                                                "batch2");
+        }
+
+        // Decision taken, now clear current vector
+        path_map_vector.clear();
+
     } else {
         throw IosxrTelemetryException(folly::sformat(
                 "Encoding Path {} not found in registered sensor paths",
