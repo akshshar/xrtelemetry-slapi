@@ -42,14 +42,20 @@ sudo make install
 ```
 
 
+### Build the miscellaneous dependencies required by the app
+
+```
+git clone https://github.com/akshshar/xrtelemetry-slapi
+cd xrtelemetry-slapi/
+./build_misc_dependencies.sh
+```
+
 ### Build the xrtelemetry-slapi app
 
 Build the xrtelemetry-slapi app by issuing a `make` in the root directory
 
 
 ```
-git clone https://github.com/akshshar/xrtelemetry-slapi
-cd xrtelemetry-slapi/
 make
 
 ```
